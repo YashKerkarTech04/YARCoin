@@ -1,0 +1,91 @@
+.student-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #6a11cb, #2575fc);
+  padding: 20px;
+}
+
+.student-box {
+  background: #fff;
+  padding: 30px;
+  border-radius: 15px;
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.student-box h2 {
+  margin-bottom: 5px;
+  font-size: 1.8rem;
+  color: #333;
+}
+
+.student-box p {
+  margin-bottom: 20px;
+  color: #666;
+}
+
+.student-form {
+  text-align: left;
+}
+
+.student-form label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: #444;
+}
+
+.student-form input,
+.student-form textarea,
+.student-form select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  outline: none;
+  transition: 0.3s;
+}
+
+.student-form input:focus,
+.student-form textarea:focus,
+.student-form select:focus {
+  border-color: #6a11cb;
+  box-shadow: 0 0 5px rgba(106, 17, 203, 0.3);
+}
+
+.student-form textarea {
+  resize: none;
+}
+
+.student-form button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #6a11cb, #2575fc);
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.student-form button:hover {
+  opacity: 0.9;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .student-box {
+    padding: 20px;
+  }
+
+  .student-box h2 {
+    font-size: 1.5rem;
+  }
+}
