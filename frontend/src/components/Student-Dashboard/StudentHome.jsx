@@ -1,29 +1,41 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { 
+  FaUserGraduate, 
+  FaChalkboardTeacher, 
+  FaHammer,
+  FaCoins,
+  FaMoneyBillWave,
+  FaRocket,
+  FaArrowRight,
+  FaTrophy,
+  FaChartLine,
+  FaBullseye,
+  FaClock,
+  FaUsers,
+  FaAward,
+  FaShieldAlt
+} from "react-icons/fa";
 import "./StudentHome.css";
-import Navbar from "../Navbar/Navbar";
+// import Navbar from "../Navbar/Navbar";
 
 export default function StudentHome() {
   const [loggedInUser, setLoggedInUser] = useState("");
-  const [formData, setFormData] = useState({
-    achievementName: "",
-    position: "",
-    description: "",
-    date: "",
-    category: "",
-    teacherUsername: "",
-    certificate: null,
-  });
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    // Get username from localStorage when component mounts
-    const username = localStorage.getItem("username") || "";
-    setLoggedInUser(username);
-    
-    if (!username) {
-      alert("You are not logged in. Redirecting to login page.");
-      window.location.href = "/login";
+    // Method 1: Get from navigation state (most reliable)
+    if (location.state && location.state.name) {
+      setLoggedInUser(location.state.name);
+      localStorage.setItem("username", location.state.name); // Also store it
+    } 
+    // Method 2: Get from localStorage (fallback)
+    else {
+      const studentName = localStorage.getItem("username") || "";
+      setLoggedInUser(studentName);
     }
-  }, []);
+  }, [location]);
 
   const handleLogout = () => {
     localStorage.removeItem("username");
@@ -31,153 +43,232 @@ export default function StudentHome() {
     window.location.href = "/";
   };
 
-  // handle text inputs
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  // handle file input
-  const handleFileChange = (e) => {
-    setFormData({ ...formData, certificate: e.target.files[0] });
-  };
-
-  // submit form
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!loggedInUser) {
-      alert("You must be logged in to submit an achievement");
-      return;
-    }
-
-    const data = new FormData();
-    data.append("achievementName", formData.achievementName);
-    data.append("position", formData.position);
-    data.append("description", formData.description);
-    data.append("date", formData.date);
-    data.append("category", formData.category);
-    data.append("teacherUsername", formData.teacherUsername);
-    data.append("studentUsername", loggedInUser); // ✅ Add studentUsername to FormData
-    
-    if (formData.certificate) {
-      data.append("certificate", formData.certificate);
-    }
-
-    try {
-      const res = await fetch("http://localhost:5000/student/achievement", {
-        method: "POST",
-        body: data,
-      });
-
-      const result = await res.json();
-      if (res.ok) {
-        alert("Achievement submitted successfully!");
-        // Reset form
-        setFormData({
-          achievementName: "",
-          position: "",
-          description: "",
-          date: "",
-          category: "",
-          teacherUsername: "",
-          certificate: null,
-        });
-      } else {
-        alert("❌ Error: " + result.error);
-      }
-    } catch (err) {
-      console.error("Error:", err);
-      alert("❌ Failed to connect to backend");
-    }
+  const handleEnterPlayground = () => {
+    navigate("/student/playground");
   };
 
   return (
-    <div>
-      <Navbar onLogout={handleLogout} />
-      <div className="student-container">
-        <div className="student-box">
-          <h2>Achievement Submission Form</h2>
-          <p>Fill out your achievement details below</p>
-          <p>Logged in as: <strong>{loggedInUser}</strong></p>
+    <div className="student-home">
+      {/* <Navbar onLogout={handleLogout} /> */}
+      
+      <div className="student-home-container">
+        {/* Hero Section - Only content and visual in grid */}
+        <div className="student-hero-section">
+          <div className="hero-content">
+            <div className="welcome-badge">
+              <span>Welcome, {loggedInUser || "Student"}!</span>
+            </div>
+            
+            {/* <h1 className="hero-title">
+              Discover Your <span className="highlight">Potential</span> in the Learning Playground
+            </h1> */}
 
-          <form className="student-form" onSubmit={handleSubmit}>
-            <label>Achievement Name</label>
-            <input
-              type="text"
-              name="achievementName"
-              placeholder="Enter achievement name"
-              value={formData.achievementName}
-              onChange={handleChange}
-              required
-            />
+            <h1 className="hero-title">
+              Discover Your Potential in the Learning Playground
+            </h1>
+            
+            <p className="hero-description">
+              Step into an interactive space where teachers recognize and bid on student talents. 
+              Showcase your achievements and get noticed by educators in real-time.
+            </p>
 
-            <label>Position / Rank</label>
-            <input
-              type="text"
-              name="position"
-              placeholder="e.g., 1st Place, Runner-up, Gold Medal, Winner"
-              value={formData.position}
-              onChange={handleChange}
-              required
-            />
+            <div className="main-cta-section">
+              <button 
+                className="enter-playground-btn"
+                onClick={handleEnterPlayground}
+              >
+                <FaRocket className="btn-icon" />
+                Enter Playground
+                <FaArrowRight className="btn-arrow" />
+              </button>
+              
+              <div className="cta-stats">
+                <div className="stat-item">
+                  <span className="stat-number">50+</span>
+                  <span className="stat-label">Active Students</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-number">25+</span>
+                  <span className="stat-label">Teachers</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-number">100+</span>
+                  <span className="stat-label">Live Bids</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="hero-visual">
+            <div className="visual-container">
+              {/* Bidding Auction Center */}
+              <div className="auction-center">
+                <div className="auction-podium">
+                  <div className="podium-platform">
+                    <div className="spotlight"></div>
+                    <FaUserGraduate className="student-avatar" />
+                  </div>
+                  <div className="bidding-active">BIDDING</div>
+                </div>
 
-            <label>Description</label>
-            <textarea
-              name="description"
-              placeholder="Brief description of the achievement"
-              value={formData.description}
-              onChange={handleChange}
-              rows="4"
-              required
-            ></textarea>
+                {/* Rising Bid Numbers */}
+                <div className="bid-bubble bid-1">
+                  <span className="bid-amount">+50</span>
+                  <span className="bid-currency">
+                    <FaCoins className="currency-icon" />
+                    YARC
+                  </span>
+                </div>
+                <div className="bid-bubble bid-2">
+                  <span className="bid-amount">+75</span>
+                  <span className="bid-currency">
+                    <FaCoins className="currency-icon" />
+                    YARC
+                  </span>
+                </div>
+                <div className="bid-bubble bid-3">
+                  <span className="bid-amount">+100</span>
+                  <span className="bid-currency">
+                    <FaCoins className="currency-icon" />
+                    YARC
+                  </span>
+                </div>
+                <div className="bid-bubble bid-4">
+                  <span className="bid-amount">+125</span>
+                  <span className="bid-currency">
+                    <FaCoins className="currency-icon" />
+                    YARC
+                  </span>
+                </div>
 
-            <label>Date of Achievement</label>
-            <input
-              type="date"
-              name="date"
-              value={formData.date}
-              onChange={handleChange}
-              required
-            />
+                {/* Bid Waves */}
+                <div className="bid-wave wave-1"></div>
+                <div className="bid-wave wave-2"></div>
+                <div className="bid-wave wave-3"></div>
+              </div>
 
-            <label>Category</label>
-            <select
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              required
-            >
-              <option value="">-- Select Category --</option>
-              <option value="Academic">Academic</option>
-              <option value="Sports">Sports</option>
-              <option value="Cultural">Cultural</option>
-              <option value="Technical">Technical</option>
-              <option value="Other">Other</option>
-            </select>
+              {/* Teacher Bidding Cards */}
+              <div className="floating-card card-1">
+                <div className="card-badge">BIDDING</div>
+                <div className="card-header">
+                  <FaChalkboardTeacher className="teacher-avatar" />
+                  <div className="teacher-info">
+                    <span className="teacher-name">Prof. Andrew</span>
+                    <span className="subject">Machine Learning</span>
+                  </div>
+                </div>
+                <div className="card-content">
+                  <div className="bid-info">
+                    <span className="current-bid">Current Bid</span>
+                    <span className="bid-amount">50 YARC</span>
+                    <span className="bid-student">on Yash Kerkar</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="floating-card card-2">
+                <div className="card-badge">BIDDING</div>
+                <div className="card-header">
+                  <FaChalkboardTeacher className="teacher-avatar" />
+                  <div className="teacher-info">
+                    <span className="teacher-name">Prof. Raunak Joshi</span>
+                    <span className="subject">Deep Learning</span>
+                  </div>
+                </div>
+                <div className="card-content">
+                  <div className="bid-info">
+                    <span className="current-bid">Current Bid</span>
+                    <span className="bid-amount">75 YARC</span>
+                    <span className="bid-student">on Ankit Bari</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="floating-card card-3">
+                <div className="card-badge">HIGHEST</div>
+                <div className="card-header">
+                  <FaChalkboardTeacher className="teacher-avatar" />
+                  <div className="teacher-info">
+                    <span className="teacher-name">Prof. Anjali Pardeshi</span>
+                    <span className="subject">Blockchain</span>
+                  </div>
+                </div>
+                <div className="card-content">
+                  <div className="bid-info">
+                    <span className="current-bid">Winning Bid</span>
+                    <span className="bid-amount">100 YARC</span>
+                    <span className="bid-student">on Rahul Singh</span>
+                  </div>
+                </div>
+              </div>
 
-            <label>Upload Certificate</label>
-            <input
-              type="file"
-              name="certificate"
-              onChange={handleFileChange}
-              accept=".jpg,.jpeg,.png,.pdf"
-              required
-            />
+              {/* Auction Elements */}
+              <FaHammer className="auction-hammer" />
+              <FaMoneyBillWave className="price-tag" />
+            </div>
+          </div>
+        </div>
 
-            <label>Teacher Username</label>
-            <input
-              type="text"
-              name="teacherUsername"
-              placeholder="Enter teacher's username"
-              value={formData.teacherUsername}
-              onChange={handleChange}
-              required
-            />
-
-            <button type="submit">Submit Achievement</button>
-          </form>
+        {/* Features Section - OUTSIDE the grid, full width */}
+        <div className="features-section">
+          <h2 className="features-title">Why Join Our Platform?</h2>
+          <div className="features-grid">
+            <div className="feature-card">
+              <div className="feature-icon-container">
+                <FaBullseye className="feature-icon" />
+              </div>
+              <h3>Real-time Bidding</h3>
+              <p>Experience live bidding sessions where teachers compete to mentor talented students. Watch bids update in real-time.</p>
+              <div className="feature-stats">
+                <span className="stat">
+                  <FaClock className="stat-icon" />
+                  Live Updates
+                </span>
+                <span className="stat">
+                  <FaUsers className="stat-icon" />
+                  25+ Teachers
+                </span>
+              </div>
+            </div>
+            
+            <div className="feature-card">
+              <div className="feature-icon-container">
+                <FaChartLine className="feature-icon" />
+              </div>
+              <h3>Live Analytics</h3>
+              <p>Track bidding patterns, teacher preferences, and market trends with our comprehensive analytics dashboard.</p>
+              <div className="feature-stats">
+                <span className="stat">
+                  <FaChartLine className="stat-icon" />
+                  Real-time Data
+                </span>
+                <span className="stat">
+                  <FaShieldAlt className="stat-icon" />
+                  Secure Tracking
+                </span>
+              </div>
+            </div>
+            
+            <div className="feature-card">
+              <div className="feature-icon-container">
+                <FaTrophy className="feature-icon" />
+              </div>
+              <h3>Get Recognized</h3>
+              <p>Showcase your skills and achievements to get noticed by top educators. Build your academic reputation.</p>
+              <div className="feature-stats">
+                <span className="stat">
+                  <FaAward className="stat-icon" />
+                  Achievement Badges
+                </span>
+                <span className="stat">
+                  <FaUsers className="stat-icon" />
+                  Mentor Network
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>   
+    </div>
   );
 }

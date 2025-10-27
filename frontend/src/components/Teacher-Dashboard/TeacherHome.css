@@ -29,6 +29,46 @@
   gap: 30px;
 }
 
+/* Bid Result Message Styles */
+.bid-result-message {
+  position: fixed;
+  top: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  z-index: 1000;
+  text-align: center;
+  min-width: 300px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: slideDown 0.3s ease-out;
+}
+
+.bid-result-message.success {
+  background: #27ae60;
+  color: white;
+  border: 1px solid #219653;
+}
+
+.bid-result-message.error {
+  background: #e74c3c;
+  color: white;
+  border: 1px solid #c0392b;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
 /* Students Section */
 .students-section {
   /* width:100%; */

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import "./TeacherNavbar.css";
 
-export default function TeacherNavbar({ onLogout, onConnectMetamask }) {
+export default function TeacherNavbar({ onLogout }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
 
@@ -58,14 +58,6 @@ export default function TeacherNavbar({ onLogout, onConnectMetamask }) {
               Profile
             </Link>
           </li>
-          {/* <li className="teacher-tab-item">
-            <button 
-              className="teacher-tab-link metamask-btn"
-              onClick={onConnectMetamask}
-            >
-              Connect MetaMask
-            </button>
-          </li> */}
         </ul>
 
         <button className="teacher-logout-btn" onClick={handleLogout}>
@@ -99,17 +91,6 @@ export default function TeacherNavbar({ onLogout, onConnectMetamask }) {
               >
                 Profile
               </Link>
-            </li>
-            <li className="teacher-mobile-tab-item">
-              <button 
-                className="teacher-mobile-tab-link metamask-btn"
-                onClick={() => {
-                  onConnectMetamask();
-                  closeMobileMenu();
-                }}
-              >
-              Connect MetaMask
-              </button>
             </li>
             <li className="teacher-mobile-tab-item">
               <button 

@@ -1,31 +1,43 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom"; //for redirecting
 import "./Auth.css";
 
 export default function Auth() {
-  const [tab, setTab] = useState("register"); 
-  const [role, setRole] = useState("student"); // role selection only for registration
-  const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState({ text: "", type: "" });
+
+  //useState variables
+  const [tab, setTab] = useState("register");  // "register" or "login"
+  const [role, setRole] = useState("student");  // "student" or "teacher"
+  const [isLoading, setIsLoading] = useState(false); //Disables form buttons during API calls.
+  const [message, setMessage] = useState({ text: "", type: "" }); //to show success or error message
   const navigate = useNavigate();
 
-  // form state
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    username: "",
-    password: "",
-    confirmPassword: ""
+  // Student registration form state
+  //For storing the data of 3 forms
+
+  // (a) Student Register
+  const [studentFormData, setStudentFormData] = useState({
+    name: "", email: "", skills: "", achievements: "", basePrice: ""
   });
 
+  // (b) Teacher registration form state
+  const [teacherFormData, setTeacherFormData] = useState({
+    name: "", email: "", specialization: ""
+  });
+
+  // (c) Login form
   const [loginData, setLoginData] = useState({
-    username: "",
-    password: ""
+    email: "", walletAddress: ""
   });
 
-  // handle input changes
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  // Handle student form changes
+  const handleStudentChange = (e) => {
+    setStudentFormData({ ...studentFormData, [e.target.name]: e.target.value });
+    if (message.text) setMessage({ text: "", type: "" });
+  };
+
+  // Handle teacher form changes
+  const handleTeacherChange = (e) => {
+    setTeacherFormData({ ...teacherFormData, [e.target.name]: e.target.value });
     if (message.text) setMessage({ text: "", type: "" });
   };
 
@@ -34,122 +46,164 @@ export default function Auth() {
     if (message.text) setMessage({ text: "", type: "" });
   };
 
-  // show message helper
+  //showing temporary success/error messages
   const showMessage = (text, type) => {
     setMessage({ text, type });
     setTimeout(() => setMessage({ text: "", type: "" }), 5000);
   };
 
-  // submit register form
+  // Submit register form
   const handleRegister = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    if (formData.password !== formData.confirmPassword) {
-      showMessage("Passwords do not match!", "error");
-      setIsLoading(false);
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      showMessage("Password must be at least 6 characters long!", "error");
-      setIsLoading(false);
-      return;
-    }
+    e.preventDefault();  //after submitting the form, it prevents the page from getting reload.
+    setIsLoading(true); //button for register gets disable, because data is going
 
     try {
-      const res = await fetch("http://localhost:5000/register", {
+      const baseUrl = "https://winona-errable-raphael.ngrok-free.dev/api";
+      const url = role === "student" 
+        ? `${baseUrl}/students`
+        : `${baseUrl}/teachers`;
+
+      const payload = role === "student" ? {
+        name: studentFormData.name,
+        email: studentFormData.email,
+        skills: studentFormData.skills.split(',').map(skill => skill.trim()), //array is getting created
+        achievements: studentFormData.achievements.split(',').map(ach => ach.trim()), //array is getting created
+        basePrice: parseInt(studentFormData.basePrice)
+        // walletAddress auto-assigned by backend for both students and teachers
+      } : {
+        name: teacherFormData.name,
+        email: teacherFormData.email,
+        specialization: teacherFormData.specialization
+        // walletAddress auto-assigned by backend
+      };
+
+      const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          username: formData.username,
-          password: formData.password,
-          role: role,
-        }),
+        body: JSON.stringify(payload),
       });
+
       const data = await res.json();
 
       if(!res.ok){
-        showMessage("Error: " + data.error, "error");
+        showMessage("Error: " + (data.error || "Registration failed"), "error");
         return;
       }
+
+      // SHOW WALLET ADDRESS FOR BOTH ROLES (auto-assigned)
+      if (data.walletAddress) {
+        showMessage(`${role.charAt(0).toUpperCase() + role.slice(1)} registered successfully! Your auto-assigned wallet: ${data.walletAddress} - COPY THIS FOR LOGIN`, "success");
+        // Auto-fill login for convenience
+        setLoginData({
+          email: role === "student" ? studentFormData.email : teacherFormData.email,
+          walletAddress: data.walletAddress
+        });
+      } else {
+        showMessage("✅ Registered successfully! Please check your wallet address.", "success");
+      }
+
+      setTab("login");
       
-      showMessage("Registered successfully!", "success");
-      setTab("login"); // switch to login after registration
-      
-      // Clear form
-      setFormData({
-        firstName: "",
-        lastName: "",
-        username: "",
-        password: "",
-        confirmPassword: ""
+      // Clear forms
+      setStudentFormData({
+        name: "",
+        email: "",
+        skills: "",
+        achievements: "",
+        basePrice: ""
       });
+      setTeacherFormData({
+        name: "",
+        email: "",
+        specialization: ""
+      });
+
     } catch (err) {
       console.error("Error:", err);
-      showMessage("Failed to connect to backend", "error");
+      showMessage("❌ Failed to connect to backend", "error");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // submit login form
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
+// Submit login form - UPDATED VERSION
+const handleLogin = async (e) => {
+  e.preventDefault();
+  setIsLoading(true);
 
-    try {
-      const res = await fetch("http://localhost:5000/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: loginData.username,
-          password: loginData.password,
-        }),
-      });
+  try {
+    const baseUrl = "https://winona-errable-raphael.ngrok-free.dev/login";
 
-      const data = await res.json();
+    const res = await fetch(`${baseUrl}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: loginData.email,
+        walletAddress: loginData.walletAddress
+      }),
+    });
 
-      if (!res.ok || !data.success) {
-        showMessage("" + (data.error || "Login failed"), "error");
-        return;
-      }
+    const data = await res.json();
+    console.log("Data:", data);
 
-      localStorage.setItem("username", data.username);
-      localStorage.setItem("role", data.role);
-
-      showMessage("🎉 Login successful! Redirecting...", "success");
-
-      // Navigate based on backend role
-      setTimeout(() => {
-        if (data.role === "teacher") {
-          navigate("/teacher-home", { state: { username: data.username } });
-        } else if (data.role === "student") {
-          navigate("/student-home", { state: { username: data.username } });
-        } else {
-          showMessage("Invalid role received from backend", "error");
-        }
-      }, 1000);
-
-    } catch (err) {
-      console.error("Error:", err);
-      showMessage("Failed to connect to backend", "error");
-    } finally {
-      setIsLoading(false);
+    if (!res.ok) {
+      showMessage("Error: " + (data.error || "Login failed"), "error");
+      return;
     }
+
+    const user = data.user;
+    const userRole = data.role;
+
+    console.log("User:", user);
+    console.log("User role:", userRole);
+
+    // ✅ STORE USER DATA IN LOCALSTORAGE
+    localStorage.setItem("userEmail", user.email);
+    localStorage.setItem("userName", user.name);
+    localStorage.setItem("userRole", userRole);
+    localStorage.setItem("userId", user._id);
+    if (user.walletAddress) {
+      localStorage.setItem("walletAddress", user.walletAddress);
+    }
+
+    showMessage("Login successful! Redirecting...", "success");
+
+    // Navigate based on role with user data
+    setTimeout(() => {
+      if (userRole === 'teacher') {
+        navigate("/teacher-home", { 
+          state: { 
+            ...user,
+            role: 'teacher'
+          } 
+        });
+      } else {
+        navigate("/student-home", { 
+          state: { 
+            ...user,
+            role: 'student'
+          } 
+        });
+      }
+    }, 1000);
+
+  } catch (err) {
+    console.error("Error:", err);
+    showMessage("❌ Failed to connect to backend", "error");
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+
+  // Get current form data based on role
+  const getCurrentFormData = () => {
+    return role === "student" ? studentFormData : teacherFormData;
   };
 
-  // Password strength indicator (optional feature)
-  const getPasswordStrength = (password) => {
-    if (password.length === 0) return { text: "", className: "" };
-    if (password.length < 6) return { text: "Weak", className: "weak" };
-    if (password.length < 8) return { text: "Medium", className: "medium" };
-    return { text: "Strong", className: "strong" };
+  const getCurrentHandleChange = () => {
+    return role === "student" ? handleStudentChange : handleTeacherChange;
   };
-
-  const passwordStrength = getPasswordStrength(formData.password);
 
   return (
     <div className="auth-container">
@@ -161,14 +215,12 @@ export default function Auth() {
             : `Register as a ${role}`}
         </p>
 
-        {/* Display Messages */}
         {message.text && (
           <div className={`auth-message ${message.type}`}>
             {message.text}
           </div>
         )}
 
-        {/* Role Toggle - only for registration */}
         {tab === "register" && (
           <div className="role-toggle">
             <button
@@ -176,28 +228,27 @@ export default function Auth() {
               className={role === "student" ? "active" : ""}
               onClick={() => setRole("student")}
             >
-               Student
+              Student
             </button>
             <button
               type="button"
               className={role === "teacher" ? "active" : ""}
               onClick={() => setRole("teacher")}
             >
-               Teacher
+              Teacher
             </button>
           </div>
         )}
 
-        {/* Login Form */}
         {tab === "login" && (
           <form className="auth-form" onSubmit={handleLogin}>
             <div className="input-group">
-              <label>Username</label>
+              <label>Email</label>
               <input
-                type="text"
-                name="username"
-                placeholder="Enter your username"
-                value={loginData.username}
+                type="email"
+                name="email"
+                placeholder="Enter your email"
+                value={loginData.email}
                 onChange={handleLoginChange}
                 required
                 disabled={isLoading}
@@ -205,12 +256,12 @@ export default function Auth() {
             </div>
 
             <div className="input-group">
-              <label>Password</label>
+              <label>Wallet Address</label>
               <input
-                type="password"
-                name="password"
-                placeholder="Enter your password"
-                value={loginData.password}
+                type="text"
+                name="walletAddress"
+                placeholder="Enter your wallet address"
+                value={loginData.walletAddress}
                 onChange={handleLoginChange}
                 required
                 disabled={isLoading}
@@ -228,79 +279,91 @@ export default function Auth() {
           </form>
         )}
 
-        {/* Register Form */}
         {tab === "register" && (
           <form className="auth-form" onSubmit={handleRegister}>
-            <div className="name-fields">
-              <div className="input-group">
-                <label>First Name</label>
-                <input
-                  type="text"
-                  name="firstName"
-                  placeholder="First name"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-              <div className="input-group">
-                <label>Last Name</label>
-                <input
-                  type="text"
-                  name="lastName"
-                  placeholder="Last name"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
-
             <div className="input-group">
-              <label>Username</label>
+              <label>Name</label>
               <input
                 type="text"
-                name="username"
-                placeholder="Choose a username"
-                value={formData.username}
-                onChange={handleChange}
+                name="name"
+                placeholder={`Enter your ${role} name`}
+                value={getCurrentFormData().name}
+                onChange={getCurrentHandleChange()}
                 required
                 disabled={isLoading}
               />
             </div>
 
             <div className="input-group">
-              <label>Password</label>
+              <label>Email</label>
               <input
-                type="password"
-                name="password"
-                placeholder="Create a password (min. 6 characters)"
-                value={formData.password}
-                onChange={handleChange}
+                type="email"
+                name="email"
+                placeholder="Enter your email"
+                value={getCurrentFormData().email}
+                onChange={getCurrentHandleChange()}
                 required
                 disabled={isLoading}
               />
-              {formData.password && (
-                <div className={`password-strength ${passwordStrength.className}`}>
-                  {passwordStrength.text}
+            </div>
+
+            {role === "student" ? (
+              <>
+                <div className="input-group">
+                  <label>Skills (comma separated)</label>
+                  <input
+                    type="text"
+                    name="skills"
+                    placeholder="e.g., React, Node.js, Blockchain"
+                    value={studentFormData.skills}
+                    onChange={handleStudentChange}
+                    required
+                    disabled={isLoading}
+                  />
                 </div>
-              )}
-            </div>
 
-            <div className="input-group">
-              <label>Confirm Password</label>
-              <input
-                type="password"
-                name="confirmPassword"
-                placeholder="Confirm your password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                required
-                disabled={isLoading}
-              />
-            </div>
+                <div className="input-group">
+                  <label>Achievements (comma separated)</label>
+                  <input
+                    type="text"
+                    name="achievements"
+                    placeholder="e.g., Hackathon Winner, Open Source Contributor"
+                    value={studentFormData.achievements}
+                    onChange={handleStudentChange}
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+
+                <div className="input-group">
+                  <label>Base Price (YARCoins)</label>
+                  <input
+                    type="number"
+                    name="basePrice"
+                    placeholder="Enter your base price"
+                    value={studentFormData.basePrice}
+                    onChange={handleStudentChange}
+                    required
+                    disabled={isLoading}
+                    min="1"
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="input-group">
+                <label>Specialization</label>
+                <input
+                  type="text"
+                  name="specialization"
+                  placeholder="e.g., Machine Learning, Web Development"
+                  value={teacherFormData.specialization}
+                  onChange={handleTeacherChange}
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+            )}
+
 
             <p className="signup-text">
               Already have an account?{" "}
