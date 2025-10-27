@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import './TeacherHome.css';
 import TeacherNavbar from "../Navbar/TeacherNavbar";
 
@@ -12,8 +13,6 @@ const TeacherHome = () => {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [bidAmount, setBidAmount] = useState('');
   const [loading, setLoading] = useState(true);
-  const [bidMessage, setBidMessage] = useState({ text: '', type: '' }); // Add this state
-
 
   useEffect(() => {
     fetchInitialData();
@@ -21,9 +20,6 @@ const TeacherHome = () => {
 
   const fetchInitialData = async () => {
     try {
-      // setLoading(true);
-      // console.log("🔄 Fetching data from backend...");
-
       const baseUrl = "https://winona-errable-raphael.ngrok-free.dev/api";
 
       // ✅ Fetch students
@@ -54,16 +50,10 @@ const TeacherHome = () => {
 
       const teachersData = await teachersResponse.json();
 
-      // console.log("✅ Students data:", studentsData);
-      // console.log("✅ Teachers data:", teachersData);
-
-      // ✅ Identify current teacher
-       // ✅ Identify current teacher - FIXED APPROACH
       let currentTeacherData = null;
 
       // Method 1: Check if teacher data was passed via navigation state
       if (location.state && location.state.email) {
-        // console.log("📍 Finding teacher from navigation state...");
         currentTeacherData = teachersData.find(
           (teacher) => teacher.email === location.state.email
         );
@@ -90,8 +80,6 @@ const TeacherHome = () => {
 
       console.log("👨‍🏫 Current teacher identified:", currentTeacherData);
 
-    
-
       setStudents(studentsData);
       setTeachers(teachersData);
       setCurrentTeacher(currentTeacherData);
@@ -102,23 +90,23 @@ const TeacherHome = () => {
     }
   };
 
-  // 🔹 Process student data for display
+  // 🔹 Process student data for display - THIS FUNCTION WAS MISSING
   const processStudentForDisplay = (student) => ({
     id: student._id,
     name: student.name,
     email: student.email,
     skills: student.skills || ['Skills not specified'],
     achievements: student.achievements || ['Achievements not specified'],
-    currentBid: student.yarCoins || 0,
+    currentBid: student.yarBalance || 0,
     currentTeacher: student.ownedBy?.name || null,
     basePrice: student.basePrice || 30,
     isAvailable: !student.ownedBy,
   });
 
   const getTeacherNameById = (teacherId) => {
-  const teacher = teachers.find(t => t._id === teacherId);
-  return teacher?.name || 'Unknown Teacher';
-};
+    const teacher = teachers.find(t => t._id === teacherId);
+    return teacher?.name || 'Unknown Teacher';
+  };
 
   // 🔹 Process teacher data for display
   const processTeacherForDisplay = (teacher) => ({
@@ -132,30 +120,47 @@ const TeacherHome = () => {
   const handleBid = async (studentId) => {
     const amount = parseInt(bidAmount);
     if (!amount || amount <= 0) {
-      setBidMessage({ text: 'Please enter a valid bid amount', type: 'error' });
-      setTimeout(() => setBidMessage({ text: '', type: '' }), 2000);
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid Bid',
+        text: 'Please enter a valid bid amount',
+        timer: 2000,
+        showConfirmButton: false
+      });
       return;
     }
 
     const student = students.find((s) => s._id === studentId);
     if (!student) {
-      setBidMessage({ text: 'Student not found', type: 'error' });
-      setTimeout(() => setBidMessage({ text: '', type: '' }), 2000);
+      Swal.fire({
+        icon: 'error',
+        title: 'Student Not Found',
+        text: 'Student not found',
+        timer: 2000,
+        showConfirmButton: false
+      });
       return;
     }
 
     if (!currentTeacher) {
-      setBidMessage({ text: 'Teacher not found', type: 'error' });
-      setTimeout(() => setBidMessage({ text: '', type: '' }), 2000);
+      Swal.fire({
+        icon: 'error',
+        title: 'Teacher Not Found',
+        text: 'Teacher not found',
+        timer: 2000,
+        showConfirmButton: false
+      });
       return;
     }
 
     if (amount > (currentTeacher.purse || 10000)) {
-      setBidMessage({ 
-        text: `Insufficient YARCoin in purse. You have ${currentTeacher.purse || 0} YARCoins`, 
-        type: 'error' 
+      Swal.fire({
+        icon: 'error',
+        title: 'Insufficient Funds',
+        text: `Insufficient YARCoin in purse. You have ${currentTeacher.purse || 0} YARCoins`,
+        timer: 3000,
+        showConfirmButton: false
       });
-      setTimeout(() => setBidMessage({ text: '', type: '' }), 2000);
       return;
     }
 
@@ -173,42 +178,80 @@ const TeacherHome = () => {
         }
       );
 
-      console.log("Current Teacher:",currentTeacher);
-      console.log("Current Student:",selectedStudent);
+      console.log("Current Teacher:", currentTeacher);
+      console.log("Current Student:", selectedStudent);
       console.log('Current Amount:', amount);
 
       const result = await response.json();
-      console.log("Result:",result);
+      console.log("Result:", result);
 
       if (response.ok) {
-        setBidMessage({ text: 'Bid Successful', type: 'success' });
-        setTimeout(() => {
-          setBidMessage({ text: '', type: '' });
+        Swal.fire({
+          icon: 'success',
+          title: 'Bid Successful!',
+          text: 'Your bid has been placed successfully',
+          timer: 2000,
+          showConfirmButton: false
+        }).then(() => {
           fetchInitialData();
           setBidAmount('');
           setSelectedStudent(null);
-        }, 2000);
+        });
       } else {
-        setBidMessage({ text: `${result.message}`, type: 'error' });
-        setTimeout(() => setBidMessage({ text: '', type: '' }), 2000);
+        Swal.fire({
+          icon: 'error',
+          title: 'Bid Failed',
+          text: result.message || 'Failed to place bid',
+          timer: 2000,
+          showConfirmButton: false
+        });
       }
-
 
     } catch (error) {
       console.error('Error placing bid:', error);
       if (error.message.includes('Failed to fetch')) {
-        setBidMessage({ text: '❌ Bidding endpoint not available yet', type: 'error' });
+        Swal.fire({
+          icon: 'error',
+          title: 'Connection Error',
+          text: 'Bidding endpoint not available yet',
+          timer: 2000,
+          showConfirmButton: false
+        });
       } else {
-        setBidMessage({ text: '❌ Error placing bid', type: 'error' });
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Error placing bid',
+          timer: 2000,
+          showConfirmButton: false
+        });
       }
-      setTimeout(() => setBidMessage({ text: '', type: '' }), 2000);
     }
   };
 
   const handleLogout = () => {
-    localStorage.clear();
-    alert('Logged out successfully!');
-    navigate('/');
+    Swal.fire({
+      title: 'Are you sure?',
+      text: 'You will be logged out from the system!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, logout!'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        localStorage.clear();
+        Swal.fire({
+          title: 'Logged out!',
+          text: 'You have been successfully logged out.',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false
+        }).then(() => {
+          navigate('/');
+        });
+      }
+    });
   };
 
   if (loading) {
@@ -231,20 +274,12 @@ const TeacherHome = () => {
       <div className="bidding-system">
         <header className="bidding-header">
           <h1>YARCoin Bidding System</h1>
-          <p>Welcome, {currentTeacher?.name || 'Teacher'} 👨‍🏫</p>
+          <p>Welcome, {currentTeacher?.name || 'Teacher'}</p>
           <p className="teacher-email">{currentTeacher?.email}</p>
           <p className="teacher-balance">
             Your YARCoin Balance: <strong>{currentTeacher?.purse || 10000} YARCoins</strong>
           </p>
         </header>
-
-        {/* Add the bid message display here */}
-        {bidMessage.text && (
-          <div className={`bid-result-message ${bidMessage.type}`}>
-            {bidMessage.text}
-          </div>
-        )}
-
 
         <div className="bidding-container">
           {/* Students Section */}
@@ -258,8 +293,6 @@ const TeacherHome = () => {
                     key={displayStudent.id}
                     className={`student-card ${!displayStudent.isAvailable ? 'acquired' : ''}`}
                   >
-
-
                     <div className="student-info">
                       <h3>{displayStudent.name}</h3>
                       <p className="student-email">{displayStudent.email}</p>
@@ -323,14 +356,6 @@ const TeacherHome = () => {
                     <p className="teacher-specialization">
                       {displayTeacher.specialization}
                     </p>
-                    <div className="current-holdings">
-                      <h4>Teacher Profile</h4>
-                      <p className="no-holdings">
-                        {displayTeacher.name === currentTeacher?.name
-                          ? 'Your profile - Ready to bid on students!'
-                          : 'Other teacher in system'}
-                      </p>
-                    </div>
                   </div>
                 );
               })}
@@ -369,7 +394,8 @@ const TeacherHome = () => {
                   id="bidAmount"
                   value={bidAmount}
                   onChange={(e) => setBidAmount(e.target.value)}
-                  placeholder={`Enter amount at least ${selectedStudent.basePrice}`}
+                  // placeholder={`Enter amount at least ${selectedStudent.basePrice}`}
+                  placeholder={`Enter the amount`}
                   min={selectedStudent.basePrice}
                 />
               </div>
@@ -380,7 +406,6 @@ const TeacherHome = () => {
                 <button
                   className="confirm-bid-btn"
                   onClick={() => handleBid(selectedStudent.id)}
-                  // disabled={!bidAmount || parseInt(bidAmount) < selectedStudent.basePrice}
                 >
                   Confirm Bid
                 </button>

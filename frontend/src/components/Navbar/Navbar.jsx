@@ -40,7 +40,7 @@ export default function Navbar({ onLogout }) {
 
       {/* Desktop Navigation */}
       <div className="navbar-desktop">
-        <ul className="navbar-tabs">
+        {/* <ul className="navbar-tabs">
           <li className="tab-item">
             <Link 
               to="/" 
@@ -57,7 +57,7 @@ export default function Navbar({ onLogout }) {
               Profile
             </Link>
           </li>
-        </ul>
+        </ul> */}
 
         <button className="logout-btn" onClick={handleLogout}>
           Logout

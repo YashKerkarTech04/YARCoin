@@ -9,13 +9,21 @@ const Playground = () => {
   const [students, setStudents] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [currentStudent, setCurrentStudent] = useState(null);
+  const [currentStudentBids, setCurrentStudentBids] = useState([]); // New state for current student's bids
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
-  const [displayStudents, setDisplayStudents] = useState([]); // New state for processed students
+  const [displayStudents, setDisplayStudents] = useState([]);
 
   useEffect(() => {
     fetchPlaygroundData();
   }, []);
+
+  // Fetch current student's bids when currentStudent is available
+  useEffect(() => {
+    if (currentStudent && currentStudent._id) {
+      fetchCurrentStudentBids(currentStudent._id);
+    }
+  }, [currentStudent]);
 
   // Process students when both students and teachers data is available
   useEffect(() => {
@@ -92,6 +100,43 @@ const Playground = () => {
     }
   };
 
+  // Function to fetch bids for the current student
+  const fetchCurrentStudentBids = async (studentId) => {
+    try {
+      console.log(`🔄 Fetching bids for student: ${studentId}`);
+      const baseUrl = "https://winona-errable-raphael.ngrok-free.dev/api";
+      
+      const bidsResponse = await fetch(`${baseUrl}/biddings/student/${studentId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+
+      if (!bidsResponse.ok) {
+        throw new Error(`Failed to fetch bids (Status: ${bidsResponse.status})`);
+      }
+
+      const bidsData = await bidsResponse.json();
+      console.log("Current student bids:", bidsData);
+      
+      // Process bids to include teacher names
+      const processedBids = bidsData.map(bid => {
+        const teacher = teachers.find(t => t._id === bid.teacherId);
+        return {
+          ...bid,
+          teacherName: teacher?.name || 'Unknown Teacher',
+          teacherEmail: teacher?.email || 'Unknown Email'
+        };
+      });
+
+      setCurrentStudentBids(processedBids);
+    } catch (error) {
+      console.error('Error fetching current student bids:', error);
+    }
+  };
+
   const processAllStudents = () => {
     const processedStudents = students.map(student => {
       // Get teacher names for bids
@@ -113,7 +158,7 @@ const Playground = () => {
         email: student.email,
         skills: student.skills || ['Not specified'],
         achievements: student.achievements || ['Not specified'],
-        currentBid: student.yarCoins || 0,
+        currentBid: student.yarBalance || 0,
         currentTeacher: ownedByTeacher?.name || null,
         basePrice: student.basePrice || 30,
         isAvailable: !student.ownedBy,
@@ -188,7 +233,6 @@ const Playground = () => {
           <section className="students-section">
             <h2>
               {activeTab === 'all' && `All Students (${filteredStudents.length})`}
-              {activeTab === 'bidding' && `Students with Active Bids (${filteredStudents.length})`}
               {activeTab === 'acquired' && `Acquired Students (${filteredStudents.length})`}
             </h2>
             
@@ -205,7 +249,6 @@ const Playground = () => {
                     </div>
                     <div className="student-value">
                       <span className="base-price">{student.basePrice} YARC</span>
-                      <span className="current-bid">Value: {student.currentBid} YARC</span>
                     </div>
                   </div>
 
@@ -271,7 +314,7 @@ const Playground = () => {
         </div>
 
         {/* Current Student Status Card */}
-        {currentStudent && (
+        {currentStudent && activeTab !== 'acquired' && (
           <div className="current-student-card">
             <h3>Your Profile</h3>
             <div className="profile-details">
@@ -287,10 +330,27 @@ const Playground = () => {
                 <span className="label">Base Price:</span>
                 <span className="value">{currentStudent.basePrice} YARC</span>
               </div>
+              
+              {/* Collapsible Dropdown for Biddings */}
               <div className="profile-item">
-                <span className="label">Current Value:</span>
-                <span className="value">{currentStudent.yarCoins || 0} YARC</span>
+                <span className="label">Current Biddings:</span>
+                {currentStudentBids.length > 0 ? (
+                  <details className="biddings-dropdown">
+                    <summary>View {currentStudentBids.length} Bid{currentStudentBids.length !== 1 && "s"}</summary>
+                    <div className="biddings-list">
+                      {currentStudentBids.map((bid, index) => (
+                        <div key={bid._id || index} className="bidding-item">
+                          <span className="teacher-name">{bid.teacherName}</span>
+                          <span className="bid-amount">{bid.bidAmount} YARC</span>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                ) : (
+                  <span className="value">No active bids</span>
+                )}
               </div>
+
               <div className="profile-item">
                 <span className="label">Status:</span>
                 <span className={`status ${currentStudent.ownedBy ? 'acquired' : 'available'}`}>
@@ -300,19 +360,6 @@ const Playground = () => {
                   }
                 </span>
               </div>
-              {currentStudent.currentBids && currentStudent.currentBids.length > 0 && (
-                <div className="profile-bids">
-                  <div className="label">Your Active Bids:</div>
-                  <div className="bids-list">
-                    {currentStudent.currentBids.map((bid, index) => (
-                      <div key={index} className="bid-item">
-                        <span className="teacher-name">{getTeacherNameById(bid.teacherId)}</span>
-                        <span className="bid-amount">+{bid.amount} YARC</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         )}
