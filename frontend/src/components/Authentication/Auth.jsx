@@ -58,7 +58,7 @@ export default function Auth() {
     setIsLoading(true); //button for register gets disable, because data is going
 
     try {
-      const baseUrl = "https://winona-errable-raphael.ngrok-free.dev/api";
+      const baseUrl = "http://localhost:5000/api";
       const url = role === "student" 
         ? `${baseUrl}/students`
         : `${baseUrl}/teachers`;
@@ -132,7 +132,7 @@ const handleLogin = async (e) => {
   setIsLoading(true);
 
   try {
-    const baseUrl = "https://winona-errable-raphael.ngrok-free.dev/login";
+    const baseUrl = "http://localhost:5000/login";
 
     const res = await fetch(`${baseUrl}`, {
       method: "POST",

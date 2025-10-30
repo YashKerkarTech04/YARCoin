@@ -20,7 +20,7 @@ const TeacherHome = () => {
 
   const fetchInitialData = async () => {
     try {
-      const baseUrl = "https://winona-errable-raphael.ngrok-free.dev/api";
+      const baseUrl = "http://localhost:5000/api";
 
       // ✅ Fetch students
       const studentsResponse = await fetch(`${baseUrl}/students`, {
@@ -166,7 +166,7 @@ const TeacherHome = () => {
 
     try {
       const response = await fetch(
-        `https://winona-errable-raphael.ngrok-free.dev/api/biddings`,
+        `http://localhost:5000/api/biddings`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

@@ -36,7 +36,7 @@ const Playground = () => {
     try {
       setLoading(true);
       console.log("🔄 Fetching data from backend...");
-      const baseUrl = "https://winona-errable-raphael.ngrok-free.dev/api";
+      const baseUrl = "http://localhost:5000/api";
       
       // Fetch all students
       const studentsResponse = await fetch(`${baseUrl}/students`, {
@@ -104,7 +104,7 @@ const Playground = () => {
   const fetchCurrentStudentBids = async (studentId) => {
     try {
       console.log(`🔄 Fetching bids for student: ${studentId}`);
-      const baseUrl = "https://winona-errable-raphael.ngrok-free.dev/api";
+      const baseUrl = "http://localhost:5000/api";
       
       const bidsResponse = await fetch(`${baseUrl}/biddings/student/${studentId}`, {
         method: "GET",
