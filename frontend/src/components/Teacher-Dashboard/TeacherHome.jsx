@@ -13,6 +13,7 @@ const TeacherHome = () => {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [bidAmount, setBidAmount] = useState('');
   const [loading, setLoading] = useState(true);
+  const [expandedTeachers, setExpandedTeachers] = useState({}); // Track which teacher dropdowns are open
 
   useEffect(() => {
     fetchInitialData();
@@ -90,7 +91,7 @@ const TeacherHome = () => {
     }
   };
 
-  // 🔹 Process student data for display - THIS FUNCTION WAS MISSING
+  // 🔹 Process student data for display
   const processStudentForDisplay = (student) => ({
     id: student._id,
     name: student.name,
@@ -116,6 +117,19 @@ const TeacherHome = () => {
     specialization: teacher.specialization || 'Not specified',
     purse: teacher.purse || 10001,
   });
+
+  // 🔹 Get acquired students for a specific teacher
+  const getAcquiredStudents = (teacherId) => {
+    return students.filter(student => student.ownedBy === teacherId);
+  };
+
+  // 🔹 Toggle dropdown for a specific teacher
+  const toggleTeacherDropdown = (teacherId) => {
+    setExpandedTeachers(prev => ({
+      ...prev,
+      [teacherId]: !prev[teacherId]
+    }));
+  };
 
   const handleBid = async (studentId) => {
     const amount = parseInt(bidAmount);
@@ -346,6 +360,9 @@ const TeacherHome = () => {
             <div className="teachers-list">
               {teachers.map((teacher) => {
                 const displayTeacher = processTeacherForDisplay(teacher);
+                const acquiredStudents = getAcquiredStudents(teacher._id);
+                const isExpanded = expandedTeachers[teacher._id];
+                
                 return (
                   <div key={displayTeacher.id} className="teacher-card">
                     <div className="teacher-header">
@@ -356,6 +373,43 @@ const TeacherHome = () => {
                     <p className="teacher-specialization">
                       {displayTeacher.specialization}
                     </p>
+                    
+                    {/* Acquired Students Dropdown */}
+                    <div className="acquired-students-dropdown">
+                      <div 
+                        className="dropdown-header"
+                        onClick={() => toggleTeacherDropdown(teacher._id)}
+                      >
+                        <span className="dropdown-title">
+                          Acquired Students ({acquiredStudents.length})
+                        </span>
+                        <span className={`dropdown-arrow ${isExpanded ? 'expanded' : ''}`}>
+                          {isExpanded ? '▲' : '▼'}
+                        </span>
+                      </div>
+                      
+                      {isExpanded && (
+                        <div className="dropdown-content">
+                          {acquiredStudents.length > 0 ? (
+                            <div className="acquired-students-list">
+                              {acquiredStudents.map((student) => (
+                                <div key={student._id} className="acquired-student-item">
+                                  <div className="student-info">
+                                    <span className="student-name">{student.name}</span>
+                                    <span className="student-email">{student.email}</span>
+                                  </div>
+                                  <div className="student-price">{student.yarBalance} YARC</div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="no-acquisitions">
+                              No students acquired yet
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -394,7 +448,6 @@ const TeacherHome = () => {
                   id="bidAmount"
                   value={bidAmount}
                   onChange={(e) => setBidAmount(e.target.value)}
-                  // placeholder={`Enter amount at least ${selectedStudent.basePrice}`}
                   placeholder={`Enter the amount`}
                   min={selectedStudent.basePrice}
                 />

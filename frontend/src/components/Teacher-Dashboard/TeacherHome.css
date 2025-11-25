@@ -366,6 +366,121 @@
   box-shadow: none;
 }
 
+/* Acquired Students Dropdown Styles */
+.acquired-students-dropdown {
+  margin-top: 15px;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.dropdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+  background: #f8f9fa;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid transparent;
+}
+
+.dropdown-header:hover {
+  background: #e9ecef;
+}
+
+.dropdown-title {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.dropdown-arrow {
+  color: #6c757d;
+  font-size: 12px;
+  transition: transform 0.2s ease;
+}
+
+.dropdown-arrow.expanded {
+  transform: rotate(180deg);
+}
+
+.dropdown-content {
+  background: white;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.acquired-students-list {
+  padding: 10px 0;
+}
+
+.acquired-student-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 15px;
+  border-bottom: 1px solid #f8f9fa;
+  transition: background-color 0.2s ease;
+}
+
+.acquired-student-item:last-child {
+  border-bottom: none;
+}
+
+.acquired-student-item:hover {
+  background-color: #f8f9fa;
+}
+
+.student-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.student-name {
+  font-weight: 500;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.student-email {
+  font-size: 0.8rem;
+  color: #6c757d;
+  margin-top: 2px;
+}
+
+.student-price {
+  font-weight: 600;
+  color: #28a745;
+  font-size: 0.9rem;
+}
+
+.no-acquisitions {
+  padding: 20px;
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+/* Scrollbar styling */
+.dropdown-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dropdown-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.dropdown-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.dropdown-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .bidding-container {
